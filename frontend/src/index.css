@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* GLOBAL */
+body {
+  @apply bg-background text-foreground transition-colors duration-300;
+}
+
+/* CARD */
+.card {
+  @apply bg-card text-card-foreground 
+  rounded-2xl p-6 shadow-sm 
+  border border-border 
+  transition-all;
+}
+
+/* INPUT */
+.input {
+  @apply w-full px-4 py-2.5 
+  border border-border 
+  bg-input-background 
+  text-foreground
+  placeholder:text-muted-foreground
+  rounded-xl text-sm 
+  focus:outline-none 
+  focus:ring-2 focus:ring-primary/30
+  transition-all;
+}
+
+/* BUTTON OUTLINE */
+.btn-outline {
+  @apply flex items-center justify-center gap-2 px-4 py-2.5 
+  border border-border 
+  rounded-xl 
+  text-foreground 
+  hover:bg-muted 
+  transition-all;
+}
