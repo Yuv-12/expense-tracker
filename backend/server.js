@@ -4,8 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 dotenv.config();
-console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
-console.log("MONGO_URI starts with:", process.env.MONGO_URI?.slice(0, 20));
+
 const app = express();
 app.use(cors());
 app.use(express.json());
