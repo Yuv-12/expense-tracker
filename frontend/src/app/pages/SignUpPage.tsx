@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { SignUp } from "@clerk/clerk-react";
+import { SignUp, useSignIn } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 import { TrendingUp, BarChart3, Wallet, ArrowRight, ChevronDown, PiggyBank, Zap, Shield } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeToggle } from "../components/ThemeToggle";
@@ -22,9 +23,42 @@ const features = [
   { icon: Zap,       color: "from-yellow-500 to-orange-500", title: "Real-time Updates", desc: "Add a transaction and see your balance, charts, and savings update instantly." },
 ];
 
+const GUEST_EMAIL = import.meta.env.VITE_GUEST_EMAIL || "guest@example.com";
+const GUEST_PASSWORD = import.meta.env.VITE_GUEST_PASSWORD || "Password123!";
+
 export default function SignUpPage() {
   const { theme } = useTheme();
   const dark = theme === "dark";
+
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const navigate = useNavigate();
+  const [isDemoLoggingIn, setIsDemoLoggingIn] = useState(false);
+  const [demoError, setDemoError] = useState("");
+
+  const handleGuestLogin = async () => {
+    if (!isLoaded) return;
+    setIsDemoLoggingIn(true);
+    setDemoError("");
+    try {
+      const result = await signIn.create({
+        identifier: GUEST_EMAIL,
+        password: GUEST_PASSWORD,
+      });
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        navigate("/");
+      } else {
+        console.error("Clerk demo login status incomplete:", result);
+        setDemoError("Demo login requires further verification. Please sign in normally.");
+        setIsDemoLoggingIn(false);
+      }
+    } catch (err: any) {
+      console.error("Guest login failed:", err);
+      setDemoError(err.message || "Failed to sign in as guest.");
+      setIsDemoLoggingIn(false);
+    }
+  };
 
   const [showAuth, setShowAuth] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -94,6 +128,13 @@ export default function SignUpPage() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <a href="/sign-in" className={`text-sm ${textSec} hover:text-indigo-400 transition font-medium`}>Sign In</a>
+            <button
+              onClick={handleGuestLogin}
+              disabled={isDemoLoggingIn}
+              className="border border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-300 hover:bg-indigo-500/10 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isDemoLoggingIn ? "Logging in..." : "Demo Login"}
+            </button>
             <button onClick={scrollToAuth} className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-900/40">
               Create Account
             </button>
@@ -127,12 +168,29 @@ export default function SignUpPage() {
           Create your free account and take control of your money in minutes. Track, analyse, and grow your savings starting today.
         </p>
 
-        <div className="relative flex flex-col sm:flex-row gap-4 mb-16">
-          <button onClick={scrollToAuth} className="group flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-xl shadow-indigo-900/50 text-lg">
+        <div className="relative flex flex-col sm:flex-row gap-4 mb-16 justify-center items-center">
+          <button onClick={scrollToAuth} className="group flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-xl shadow-indigo-900/50 text-lg w-full sm:w-auto">
             Create Free Account
             <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
           </button>
-          <a href="/sign-in" className={`flex items-center justify-center gap-2 border ${border2} hover:border-gray-500 ${textSec} hover:text-white font-semibold px-8 py-4 rounded-2xl transition-all text-lg`}>
+          <button
+            onClick={handleGuestLogin}
+            disabled={isDemoLoggingIn}
+            className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-xl shadow-teal-900/40 text-lg w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDemoLoggingIn ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Logging in...
+              </>
+            ) : (
+              "Try Demo Account"
+            )}
+          </button>
+          <a href="/sign-in" className={`flex items-center justify-center gap-2 border ${border2} hover:border-gray-500 ${textSec} hover:text-white font-semibold px-8 py-4 rounded-2xl transition-all text-lg w-full sm:w-auto`}>
             Already have an account?
           </a>
         </div>
@@ -199,8 +257,35 @@ export default function SignUpPage() {
           )}
         </div>
         {showAuth && (
-          <div ref={authRef} className="flex justify-center transition-all duration-500 opacity-100 translate-y-0">
+          <div ref={authRef} className="flex flex-col items-center gap-6 transition-all duration-500 opacity-100 translate-y-0">
             <SignUp appearance={clerkAppearance} />
+            
+            <div className={`w-full max-w-[400px] ${bgCard} border ${border} rounded-2xl p-6 shadow-xl text-center`}>
+              <h3 className={`font-bold ${textPri} text-lg mb-2`}>Want a quick look?</h3>
+              <p className={`${textSec} text-sm mb-4`}>
+                Skip the sign-up process and explore the dashboard immediately using a pre-configured guest account.
+              </p>
+              <button
+                onClick={handleGuestLogin}
+                disabled={isDemoLoggingIn}
+                className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-xl transition-all disabled:opacity-75 disabled:cursor-not-allowed"
+              >
+                {isDemoLoggingIn ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Logging in as Guest...
+                  </>
+                ) : (
+                  "Log in as Guest / Demo"
+                )}
+              </button>
+              {demoError && (
+                <p className="text-red-500 text-xs mt-3 font-medium">{demoError}</p>
+              )}
+            </div>
           </div>
         )}
       </section>
