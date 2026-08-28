@@ -41,6 +41,8 @@ export default function App() {
   return (
     <ClerkProvider
       publishableKey={clerkPubKey}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
       appearance={{
         variables: {
           colorBackground: dark ? "#0B1220" : "#FFFFFF",
