@@ -79,7 +79,7 @@ export default function SignInPage() {
         navigate("/");
       } else {
         console.error("Clerk demo login status incomplete:", result);
-        setDemoError("Demo login requires further verification. Please sign in normally.");
+        setDemoError(`Demo login status is '${result.status}'. Please sign in normally.`);
         setIsDemoLoggingIn(false);
       }
     } catch (err: any) {
