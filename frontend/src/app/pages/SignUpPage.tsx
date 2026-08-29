@@ -50,7 +50,10 @@ export default function SignUpPage() {
         navigate("/");
       } else {
         console.error("Clerk demo login status incomplete:", result);
-        setDemoError(`Demo login status is '${result.status}'. Please sign in normally.`);
+        const secondFactors = result.supportedSecondFactors 
+          ? JSON.stringify(result.supportedSecondFactors) 
+          : "none";
+        setDemoError(`Demo login status is '${result.status}'. Supported 2FA: ${secondFactors}. Please sign in normally.`);
         setIsDemoLoggingIn(false);
       }
     } catch (err: any) {
